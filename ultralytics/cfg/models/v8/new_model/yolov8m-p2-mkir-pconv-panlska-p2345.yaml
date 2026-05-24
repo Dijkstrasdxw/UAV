@@ -1,0 +1,62 @@
+# YOLOv8m-P2 + MKIR backbone + local/deep C2f_PConv + PAN-path LSKA on P2/P3/P4/P5.
+# Design:
+# 1) Keep the verified MKIR + PConv baseline unchanged.
+# 2) Add LSKA on all PAN output branches, including P5.
+# 3) Use this file to test whether the extra large-object branch attention helps overall balance.
+
+nc: 80
+scales:
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 3, C2f, [128, True]]
+  - [-1, 1, MKIR, [128, 2.0, [1, 3, 5], False, True]] # 3 P2
+  - [-1, 1, Conv, [256, 3, 2]] # 4-P3/8
+  - [-1, 6, C2f, [256, True]]
+  - [-1, 1, MKIR, [256, 2.0, [1, 3, 5], False, True]] # 6 P3
+  - [-1, 1, Conv, [512, 3, 2]] # 7-P4/16
+  - [-1, 6, C2f_PConv, [512, True]] # 8 deep replace
+  - [-1, 1, MKIR, [512, 2.0, [1, 3, 5], False, True]] # 9 P4
+  - [-1, 1, Conv, [1024, 3, 2]] # 10-P5/32
+  - [-1, 3, C2f_PConv, [1024, True]] # 11 deep replace
+  - [-1, 1, SPPF, [1024, 5]] # 12
+  - [-1, 1, MKIR, [1024, 2.0, [1, 3, 5], False, True]] # 13 P5
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 9], 1, Concat, [1]] # cat backbone P4
+  - [-1, 3, C2f, [512]] # 16
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 6], 1, Concat, [1]] # cat backbone P3
+  - [-1, 3, C2f, [256]] # 19 (P3/8-small, intermediate top-down feature)
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 3], 1, Concat, [1]] # cat backbone P2
+  - [-1, 3, C2f, [128]] # 22 (P2/4-xsmall)
+  - [-1, 1, LSKA, [23]] # 23 PAN-path LSKA on P2 output branch
+
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [[-1, 19], 1, Concat, [1]] # cat head P3
+  - [-1, 3, C2f, [256]] # 26 (P3/8-small)
+  - [-1, 1, LSKA, [23]] # 27 PAN-path LSKA on P3 output branch
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 16], 1, Concat, [1]] # cat head P4
+  - [-1, 3, C2f_PConv, [512]] # 30 (P4/16-medium), deep replace
+  - [-1, 1, LSKA, [23]] # 31 PAN-path LSKA on P4 output branch
+
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 13], 1, Concat, [1]] # cat head P5
+  - [-1, 3, C2f_PConv, [1024]] # 34 (P5/32-large), deep replace
+  - [-1, 1, LSKA, [23]] # 35 PAN-path LSKA on P5 output branch
+
+  - [[23, 27, 31, 35], 1, Detect, [nc]] # Detect(P2, P3, P4, P5)

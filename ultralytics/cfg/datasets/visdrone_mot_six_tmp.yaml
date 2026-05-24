@@ -1,0 +1,31 @@
+path: VisDrone/VisDrone2019-MOT-test-dev
+names:
+  0: pedestrian
+  1: people
+  2: bicycle
+  3: car
+  4: van
+  5: truck
+  6: tricycle
+  7: awning-tricycle
+  8: bus
+  9: motor
+benchmark:
+  split: sequences
+  annotations: annotations
+  image_extensions:
+  - .jpg
+  - .jpeg
+  - .png
+  - .bmp
+  class_offset: 1
+  eval_classes:
+    1: pedestrian
+    2: people
+    4: car
+    5: van
+    6: truck
+    9: bus
+  distractor_classes:
+    0: ignored regions
+    11: others

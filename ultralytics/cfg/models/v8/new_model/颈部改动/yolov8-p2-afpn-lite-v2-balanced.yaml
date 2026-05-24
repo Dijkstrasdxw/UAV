@@ -1,0 +1,58 @@
+# Ultralytics YOLOv8 object detection model with P2/4 - P5/32 outputs
+# AFPN-lite-v2-balanced: keep 3-way P2 fusion, reduce neck width (384 -> 320)
+
+# Parameters
+nc: 80 # number of classes
+scales:
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+# YOLOv8 backbone (unchanged)
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]]   # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]]  # 1-P2/4
+  - [-1, 3, C2f, [128, True]]   # 2
+  - [-1, 1, Conv, [256, 3, 2]]  # 3-P3/8
+  - [-1, 6, C2f, [256, True]]   # 4
+  - [-1, 1, Conv, [512, 3, 2]]  # 5-P4/16
+  - [-1, 6, C2f, [512, True]]   # 6
+  - [-1, 1, Conv, [1024, 3, 2]] # 7-P5/32
+  - [-1, 3, C2f, [1024, True]]  # 8
+  - [-1, 1, SPPF, [1024, 5]]    # 9
+
+# AFPN-lite-v2-balanced head
+head:
+  # lateral 1x1 convs
+  - [2, 1, Conv, [320, 1, 1]]  # 10 P2_l
+  - [4, 1, Conv, [320, 1, 1]]  # 11 P3_l
+  - [6, 1, Conv, [320, 1, 1]]  # 12 P4_l
+  - [9, 1, Conv, [320, 1, 1]]  # 13 P5_l
+
+  # top-down path
+  - [13, 1, nn.Upsample, [None, 2, "nearest"]]           # 14 P5 -> P4
+  - [[12, 14], 1, AFPNFusion, [320, 2, 1e-4, True]]     # 15 P4_td
+  - [15, 1, nn.Upsample, [None, 2, "nearest"]]           # 16 P4_td -> P3
+  - [13, 1, nn.Upsample, [None, 2, "nearest"]]           # 17 P5 -> P4
+  - [17, 1, nn.Upsample, [None, 2, "nearest"]]           # 18 P5 -> P3
+  - [[11, 16, 18], 1, AFPNFusion, [320, 3, 1e-4, True]] # 19 P3_td
+
+  # P2 branch: 3-way fusion
+  - [19, 1, nn.Upsample, [None, 2, "nearest"]]           # 20 P3_td -> P2
+  - [15, 1, nn.Upsample, [None, 4, "nearest"]]           # 21 P4_td -> P2
+  - [[10, 20, 21], 1, AFPNFusion, [320, 3, 1e-4, True]] # 22 P2_out
+
+  # bottom-up path
+  - [22, 1, Conv, [320, 3, 2]]                           # 23 P2 -> P3
+  - [[11, 19, 23], 1, AFPNFusion, [320, 3, 1e-4, True]] # 24 P3_out
+  - [24, 1, Conv, [320, 3, 2]]                           # 25 P3 -> P4
+  - [[12, 15, 25], 1, AFPNFusion, [320, 3, 1e-4, True]] # 26 P4_out
+  - [26, 1, Conv, [320, 3, 2]]                           # 27 P4 -> P5
+  - [24, 1, nn.MaxPool2d, [4, 4, 0]]                    # 28 P3 -> P5 shortcut
+  - [[13, 27, 28], 1, AFPNFusion, [320, 3, 1e-4, True]] # 29 P5_out
+
+  - [[22, 24, 26, 29], 1, Detect, [nc]]                  # Detect(P2, P3, P4, P5)

@@ -1,0 +1,50 @@
+# YOLOv8m-P2 + detect-only WTConv gate on the P2 red path
+# WTConv is only used for the P2 Detect input and does not feed back into PAN downsampling.
+
+nc: 80
+scales:
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [-1, 3, C2f, [128, True]]
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [-1, 6, C2f, [256, True]]
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [-1, 6, C2f, [512, True]]
+  - [-1, 1, Conv, [1024, 3, 2]]
+  - [-1, 3, C2f, [1024, True]]
+  - [-1, 1, SPPF, [1024, 5]]
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 6], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 2], 1, Concat, [1]]
+  - [-1, 3, C2f, [128]]              # 18 P2 raw output
+  - [-1, 1, WTConv, [5, 1, 8]]       # 19 P2 detect-only WTConv + light gate
+
+  - [18, 1, Conv, [128, 3, 2]]       # PAN keeps the raw P2 output
+  - [[-1, 15], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]              # 22 P3 raw output
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 12], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]              # 25 P4 raw output
+
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 9], 1, Concat, [1]]
+  - [-1, 3, C2f, [1024]]             # 28 P5 raw output
+
+  - [[19, 22, 25, 28], 1, Detect, [nc]]

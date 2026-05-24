@@ -1,0 +1,93 @@
+{
+  "uav0000086_00000_v": {
+    "MOTA": 83.50212828416264,
+    "MOTP": 0.7436711075273541,
+    "IDF1": 77.5421850142138,
+    "num_frames": 464,
+    "num_objects": 20439,
+    "num_false_positives": 43,
+    "num_misses": 2578,
+    "num_switches": 751,
+    "num_true_positives": 17861,
+    "precision": 0.9975983020554066,
+    "recall": 0.8738685845687166
+  },
+  "uav0000117_02622_v": {
+    "MOTA": 37.265003010637585,
+    "MOTP": 0.6551617195742738,
+    "IDF1": 52.70668613460426,
+    "num_frames": 349,
+    "num_objects": 14947,
+    "num_false_positives": 7352,
+    "num_misses": 947,
+    "num_switches": 1078,
+    "num_true_positives": 14000,
+    "precision": 0.6556762832521543,
+    "recall": 0.9366428045761691
+  },
+  "uav0000137_00458_v": {
+    "MOTA": 77.5762774169832,
+    "MOTP": 0.6133655425713931,
+    "IDF1": 69.88241829460236,
+    "num_frames": 233,
+    "num_objects": 16322,
+    "num_false_positives": 1210,
+    "num_misses": 1451,
+    "num_switches": 999,
+    "num_true_positives": 14871,
+    "precision": 0.9247559231391083,
+    "recall": 0.9111015806886411
+  },
+  "uav0000182_00000_v": {
+    "MOTA": 35.11565732883878,
+    "MOTP": 0.7164519554942342,
+    "IDF1": 70.52038870220689,
+    "num_frames": 363,
+    "num_objects": 8603,
+    "num_false_positives": 5076,
+    "num_misses": 260,
+    "num_switches": 246,
+    "num_true_positives": 8343,
+    "precision": 0.6217303822937625,
+    "recall": 0.9697779844240383
+  },
+  "uav0000268_05773_v": {
+    "MOTA": 32.95763699961135,
+    "MOTP": 0.5537441767649077,
+    "IDF1": 48.316889146836914,
+    "num_frames": 978,
+    "num_objects": 10292,
+    "num_false_positives": 0,
+    "num_misses": 6800,
+    "num_switches": 100,
+    "num_true_positives": 3492,
+    "precision": 1.0,
+    "recall": 0.33929265448892343
+  },
+  "uav0000305_00000_v": {
+    "MOTA": 64.39328743545612,
+    "MOTP": 0.3123548384357816,
+    "IDF1": 82.80039721946375,
+    "num_frames": 184,
+    "num_objects": 4648,
+    "num_false_positives": 1159,
+    "num_misses": 385,
+    "num_switches": 111,
+    "num_true_positives": 4263,
+    "precision": 0.7862412393950572,
+    "recall": 0.9171686746987951
+  },
+  "uav0000339_00001_v": {
+    "MOTA": 62.35961181986698,
+    "MOTP": 0.4895884877205329,
+    "IDF1": 61.487777558147194,
+    "num_frames": 275,
+    "num_objects": 9171,
+    "num_false_positives": 0,
+    "num_misses": 3165,
+    "num_switches": 287,
+    "num_true_positives": 6006,
+    "precision": 1.0,
+    "recall": 0.6548904154399738
+  }
+}

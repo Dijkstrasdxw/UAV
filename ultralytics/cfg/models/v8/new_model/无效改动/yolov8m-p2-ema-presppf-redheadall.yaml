@@ -1,0 +1,54 @@
+# YOLOv8m-P2 + EMA before SPPF and true pre-Detect red-path EMA on all 4 heads
+# The EMA blocks on P2/P3/P4/P5 are only used for Detect inputs and do not feed back into PAN downsampling.
+
+nc: 80
+scales:
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [-1, 3, C2f, [128, True]]
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [-1, 6, C2f, [256, True]]
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [-1, 6, C2f, [512, True]]
+  - [-1, 1, Conv, [1024, 3, 2]]
+  - [-1, 3, C2f, [1024, True]]
+  - [-1, 1, EMA, []]             # pre-SPPF EMA
+  - [-1, 1, SPPF, [1024, 5]]
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 6], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 2], 1, Concat, [1]]
+  - [-1, 3, C2f, [128]]          # 19 P2 raw output
+  - [-1, 1, EMA, []]             # 20 P2 detect-only EMA
+
+  - [19, 1, Conv, [128, 3, 2]]
+  - [[-1, 16], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]          # 23 P3 raw output
+  - [-1, 1, EMA, []]             # 24 P3 detect-only EMA
+
+  - [23, 1, Conv, [256, 3, 2]]
+  - [[-1, 13], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]          # 27 P4 raw output
+  - [-1, 1, EMA, []]             # 28 P4 detect-only EMA
+
+  - [27, 1, Conv, [512, 3, 2]]
+  - [[-1, 10], 1, Concat, [1]]
+  - [-1, 3, C2f, [1024]]         # 31 P5 raw output
+  - [-1, 1, EMA, []]             # 32 P5 detect-only EMA
+
+  - [[20, 24, 28, 32], 1, Detect, [nc]]

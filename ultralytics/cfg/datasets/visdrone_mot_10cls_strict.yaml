@@ -1,0 +1,46 @@
+# VisDrone MOT strict 10-class config.
+# This keeps all detector classes in evaluation and is stricter than most VisDrone MOT repos.
+
+path: VisDrone/VisDrone2019-MOT-test-dev
+
+names:
+  0: pedestrian
+  1: people
+  2: bicycle
+  3: car
+  4: van
+  5: truck
+  6: tricycle
+  7: awning-tricycle
+  8: bus
+  9: motor
+
+benchmark:
+  split: sequences
+  annotations: annotations
+  image_extensions: [".jpg", ".jpeg", ".png", ".bmp"]
+  class_offset: 1
+  eval_classes:
+    1: pedestrian
+    2: people
+    3: bicycle
+    4: car
+    5: van
+    6: truck
+    7: tricycle
+    8: awning-tricycle
+    9: bus
+    10: motor
+  distractor_classes:
+    11: others
+  ignore_region_classes: [0]
+  zero_mark: true
+  crowd_ignore_region:
+    enabled: true
+    ioa_threshold: 0.5
+  truncation:
+    enabled: false
+    thresh: 0
+  occlusion:
+    enabled: false
+    thresh: 1
